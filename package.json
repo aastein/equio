@@ -2,11 +2,43 @@
   "name": "equio",
   "version": "1.0.0",
   "description": "Smart contract for equitable group investments on the Ethereum network",
-  "main": "src/index.js",
-  "repository": "git@github.com:aastein/equio.git",
-  "author": "Aaron Stein <aaronstein12@gmail.com>",
+  "main": "bin/equio.js",
+  "contributors": [
+    "Aaron Stein <aaronstein12@gmail.com>",
+    "Brandon Goldman <brandon.goldman@gmail.com>"
+  ],
   "license": "MIT",
+  "readmeFilename": "README.md",
+  "engines": {
+    "node": "^8.1.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aastein/equi.git"
+  },
+  "scripts": {
+    "contract:deploy": "babel-node bin/equio.js --deploy",
+    "lint": "yarn run lint:js",
+    "lint:js": "eslint bin src --fix",
+    "test": "yarn run lint"
+  },
   "dependencies": {
-    "solc": "^0.4.15"
+    "babel-cli": "^6.26.0",
+    "babel-plugin-module-resolver": "^2.7.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-runtime": "^6.26.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.0.1",
+    "eslint": "^4.8.0",
+    "eslint-config-airbnb-base": "^12.0.1",
+    "eslint-config-prettier": "^2.6.0",
+    "eslint-import-resolver-babel-module": "^3.0.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-prettier": "^2.3.1",
+    "pre-commit": "^1.2.2",
+    "prettier": "^1.7.3"
   }
 }

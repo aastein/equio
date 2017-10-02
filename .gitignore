@@ -1,2 +1,9 @@
-# notes
-/*_notes.txt
+# dotfiles
+.yarnclean
+
+# files
+npm-debug.log
+TODO
+
+# folders
+node_modules

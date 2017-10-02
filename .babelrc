@@ -1,0 +1,18 @@
+{
+  "presets": [
+    ["env", {
+      "targets": {
+        "node": "current"
+      }
+    }],
+    "stage-0"
+  ],
+  "plugins": [
+    ["module-resolver", {
+      "alias": {
+        "~": "./src"
+      }
+    }],
+    "transform-runtime"
+  ]
+}
