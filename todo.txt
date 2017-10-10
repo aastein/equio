@@ -1,0 +1,32 @@
+Readme
+  how to setup
+
+Readme
+  how to use
+
+Doing the testing
+
+command line stuff
+
+1% ETH fee to specified address for charity
+
+Document buy time in seconds or milliseconds
+
+Creator of contract cannot call the killswitch
+
+Auto withdrawal - withdrawl for all contributors?
+  killswitch activated || 1hr && tokens received
+
+auto_withdraw -> withdraw, callable by anyone who has sent money
+  withdraws for everyone
+    -> everyone must withdraw for themselves
+    -> keep track of addresses which have added ether
+    -> do etherscan on contributing addresses, try to refund each address found
+
+Keep track of how much tokens have come in and gone out on a per user basis
+  Not subtracting from balances, adding to withdrawals.
+
+  total tokens in = total sent variable + contract token balance
+  mapping for withdrawn
+  expected withdrawal balance = total ETH sent * total tokens in / total ETH in
+  send = expected withdrawn balance - existing withdrawn balance

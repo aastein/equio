@@ -6,7 +6,12 @@
   "repository": "git@github.com:aastein/equio.git",
   "author": "Aaron Stein <aaronstein12@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "generate": "node src/index.js"
+  },
   "dependencies": {
-    "solc": "^0.4.15"
+    "commander": "^2.11.0",
+    "solc": "^0.4.15",
+    "web3": "^1.0.0-beta.22"
   }
 }
