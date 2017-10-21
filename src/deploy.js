@@ -10,7 +10,8 @@ console.log('Deploying EquioGenesis');
   // connect to ETH node
   web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'));
   // log network name
-  let networkId = await networkInfo(web3).id;
+  let network = await networkInfo(web3);
+  console.log('Connected to network', network.name);
   // Do contract things
   let contractPath = path.resolve('src/equio.sol');
   let source = fs.readFileSync(contractPath, 'utf8');
@@ -40,7 +41,7 @@ console.log('Deploying EquioGenesis');
         let receipt = web3.eth.getTransactionReceipt(myContract.transactionHash);
         console.log('Deployment receipt', receipt);
         console.log('Deployed EquioGenesis at: ');
-        switch (networkId) {
+        switch (network.id) {
           case "1":
             console.log(`https://etherscan.io/address/${myContract.address}`);
             break;
@@ -51,7 +52,6 @@ console.log('Deploying EquioGenesis');
             break;
         }
         // save contract address
-        const fs = require('fs');
         fs.writeFile('.equioGenesisAddress', myContract.address, (err) => {
             if (err) throw err;
             console.log('Saved EquioGenesis Address');

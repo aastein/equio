@@ -21,7 +21,6 @@ export const networkInfo = async (web3) => {
         default:
           networkName = "Unknown";
       }
-      console.log('Connected to network', networkName);
       resolve({ id: netId, name: networkName});
     });
   });
