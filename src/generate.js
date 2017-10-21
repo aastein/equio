@@ -106,7 +106,6 @@ const trace = async (web3, txHash) => (
       }, function (err, result) {
         resolve(result);
         reject(err);
-        // console.log('New Equio address', result.result.trace[1].result.address);
       });
     } catch (err) {
       console.log(err);
@@ -133,6 +132,10 @@ const trace = async (web3, txHash) => (
     // TODO: make these the contract args variable
     const txHash = await generate(web3);
     console.log('txHash', txHash);
-    const txTrace = await trace(web3, txHash);
+    let txTrace = await trace(web3, txHash);
+    while (!txTrace.result) {
+      txTrace = await trace(web3, txHash);
+    }
+    console.log('New Equio address', txTrace.result.trace[1].result.address);
   }
 })();
