@@ -12,7 +12,7 @@ console.log('Deploying EquioGenesis');
   // log network name
   let network = await networkInfo(web3);
   console.log('Connected to network', network.name);
-  // Do contract things
+  // contract initialization
   let contractPath = path.resolve('src/equio.sol');
   let source = fs.readFileSync(contractPath, 'utf8');
   let compiledContract = solc.compile(source, 1);
