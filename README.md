@@ -20,9 +20,13 @@ Get encoded contructor params with `yarn encode <args>`
 
 ## Commands
 
+</br>
+
 #### yarnDeployGenesis
 
 Deploys an EquioGenesis contract which can create new Equio contracts.
+
+</br>
 
 #### yarn deployNew / yarn callGenerate <args>
 
@@ -54,6 +58,8 @@ Options:
   -h, --help                          output usage information
 
 ```
+
+</br>
 
 #### yarn encode <args>
 
