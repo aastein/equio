@@ -138,27 +138,3 @@ contract Equio {
     default_helper();
   }
 }
-
-contract EquioGenesis {
-
-  /// Create a Equio conteact with `_name`, sale address `_sale`, token address `_token`,
-  /// password hash `_password_hash`, earliest buy block `earliest_buy_block`,
-  /// earliest buy time `_earliest_buy_time`.
-  function generate (
-    string _ico_name,
-    address _sale,
-    address _token,
-    bytes32 _password_hash,
-    uint256 _earliest_buy_block,
-    uint256 _earliest_buy_time
-  ) returns (Equio equioAddess) {
-    return new Equio(
-      _ico_name,
-      _sale,
-      _token,
-      _password_hash,
-      _earliest_buy_block,
-      _earliest_buy_time
-    );
-  }
-}
