@@ -5,6 +5,8 @@ const Web3 = require('web3');
 const solc = require('solc');
 const path = require('path');
 
+const coder = require('web3/lib/solidity/coder');
+
 import  { networkInfo } from './utils';
 import  { getChar, getName } from './utils';
 
@@ -81,6 +83,19 @@ const deploy = async (web3, abi, data, Contract, args, network) => (
   })
 );
 
+// Encodes constructor params
+const encodeConstructorParams = function (abi, params) {
+    return abi.filter(function (json) {
+        return json.type === 'constructor' && json.inputs.length === params.length;
+    }).map(function (json) {
+        return json.inputs.map(function (input) {
+            return input.type;
+        });
+    }).map(function (types) {
+        return coder.encodeParams(types, params);
+    })[0] || '';
+};
+
 (async () => {
 
   // store list of arguments in EquioGenesis generate method
@@ -111,6 +126,7 @@ const deploy = async (web3, abi, data, Contract, args, network) => (
 
   // validate command line arguments
   prgm.parse(process.argv);
+
   for (let i = 0; i < args.length; i += 1) {
     if (!prgm[args[i]]) {
       console.log('No value for', args[i], prgm.options.reduce((res, option) => (
@@ -141,8 +157,19 @@ const deploy = async (web3, abi, data, Contract, args, network) => (
       console.log('Password hash', prgm.password_hash);
       // deploy the contract
       await deploy(web3, abi, deployData, Contract, prgm, network);
+      const params = [prgm.ico_name, prgm.sale, prgm.token, prgm.password_hash, prgm.earliest_buy_block, prgm.earliest_buy_time];
+      const encodedConstructorParams = encodeConstructorParams(abi, params);
+      console.log('encodeConstructorParams', encodedConstructorParams);
+      
     } catch (err) {
       console.log(err);
     }
   }
 })();
+
+
+/*
+
+  web3/lib/web3/contract.js 36 encodeConstructorParams
+
+*/

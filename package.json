@@ -7,13 +7,18 @@
   "author": "Aaron Stein <aaronstein12@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "deploy": "babel src -d lib && node lib/deploy.js"
-  },
+    "deployNew": "babel src -d lib && node lib/deployNew.js",
+    "deployGenesis": "babel src -d lib && node lib/deployGenesis.js",
+    "callGenerate": "babel src -d lib && node lib/callGenerate.js",
+    "encode": "babel src -d lib && node lib/codedParams.js -e",
+    "decode": "babel src -d lib && node lib/codedParams.js -d"
+   },
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "commander": "^2.11.0",
+    "node-fetch": "^1.7.3",
     "prompt": "^1.0.0",
     "solc": "^0.4.15",
     "web3": "0.20.0"
