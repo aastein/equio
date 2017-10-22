@@ -8,6 +8,8 @@ Use [Parity](https://parity.io/)
 
 ## Usage
 
+Install dependencies with `yarn install`
+
 Deploy a new EquioGenesis contract with `yarn deploy`
 
 Deploy a new Equio contract with `yarn generage <args>`
