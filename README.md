@@ -4,7 +4,7 @@ Smart contract to invest in ICOs and distribute ICO tokens back to investors in 
 
 ## Requirements
 
-Use [Parity](https://parity.io/)
+Use a wallet that is compatible with [web3.js](https://github.com/ethereum/web3.js/) like [Parity](https://parity.io/)
 
 ## Usage
 
