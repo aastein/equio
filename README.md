@@ -41,11 +41,6 @@ If the password hash is unknown then leave the  `password_hash` argument empty. 
 Run `yarn deploy --help` to see arguments
 
 ```sh
-
-yarn deploy --help
-
-```
-```sh
 Options:
 
   -V, --version                       output the version number
@@ -65,13 +60,8 @@ Options:
 
 Encodes a comma separated list of constructor aguments. Helpful for validating deployed contracts.
 
-Run `yarn deploy --help` to see arguments
+Run `yarn enoce --help` to see arguments
 
-```sh
-
-yarn encode --help
-
-```
 ```sh
 Options:
 
