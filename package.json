@@ -7,8 +7,7 @@
   "author": "Aaron Stein <aaronstein12@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "deploy": "babel src -d lib && node lib/deploy.js",
-    "generate": "babel src -d lib && node lib/generate.js"
+    "deploy": "babel src -d lib && node lib/deploy.js"
   },
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.23.0",
