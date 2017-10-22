@@ -16,6 +16,8 @@ Deploy a new Equio contract through an EquioGenesis address with `yarn callGener
 
 Deploy a new Equio contract with `yarn deployNew <args>`
 
+Get encoded contructor params with `yarn encode <args>`
+
 ## Commands
 
 #### yarnDeployGenesis
@@ -49,6 +51,29 @@ Options:
   -p, --password_hash <bytes32>       
   -e, --earliest_buy_block <uint256>  
   -f, --earliest_buy_time <uint256>   
+  -h, --help                          output usage information
+
+```
+
+#### yarn encode <args>
+
+Encodes a comma separated list of constructor aguments. Helpful for validating deployed contracts.
+
+Run `yarn deploy --help` to see arguments
+
+```sh
+
+yarn encode --help
+
+```
+```sh
+Options:
+
+  -V, --version                       output the version number
+  -a, --raw_abi  <JSON>         
+  -c, --contract_path <String>  
+  -p, --abi_path <String>       
+  -m, --params <String>         
   -h, --help                          output usage information
 
 ```
