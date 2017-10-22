@@ -1,112 +1,34 @@
-const program = require('commander');
-const prompt = require('prompt');
 const fs = require("fs");
 const Web3 = require('web3');
 const solc = require('solc');
 const path = require('path');
-
 import  { networkInfo } from './utils';
-import  { getChar, getName } from './utils';
 
-// Prompt the user for a password and return the password
-const getPassword = async () => (
-  new Promise((resolve, reject) => {
-    // promp schemas
-    const promptSchema = {
-      properties: {
-        password: {
-          hidden: true,
-          message: 'Enter the kill switch password',
-        }
-      }
-    };
-    const confirmSchema = {
-      properties: {
-        password: {
-          hidden: true,
-          message: 'Re-enter the kill switch password',
-        }
-      }
-    };
-    prompt.start();
-    prompt.get(promptSchema, (err, res1) => {
-      prompt.get(confirmSchema, (err, res2) => {
-        if (!res1.password || !res2.password || res1.password !== res2.password) {
-          console.log('Passwords did not match');
-          reject();
-        } else {
-          resolve(res1.password);
-        }
-      });
-    });
-  })
-);
-
-// call the generate function
-const deploy = async (web3, abi, data, Contract, args, network) => (
-  new Promise((resolve, reject) => {
-    console.log('Confirm function call on Parity');
-    // TODO: create own web3js with args array
-    Contract.new(args.ico_name,
-      args.sale,
-      args.token,
-      args.password_hash,
-      args.earliest_buy_block,
-      args.earliest_buy_time,
-      data,
-      function(err, contract) {
-        if (!err) {
-          if (!contract.address) {
-            console.log('Deployment transaction hash', contract.transactionHash);
-          } else {
-            console.log('Deployed Equio at:');
-            switch (network.id) {
-              case "1":
-                console.log(`https://etherscan.io/address/${contract.address}`);
-                break;
-              case "42":
-                console.log(`https://kovan.etherscan.io/address/${contract.address}`);
-                break;
-              default:
-                break;
-            }
-            resolve(contract.address);
-          }
-        } else {
-          console.log(err);
-          reject(err);
-        }
-      }
-    );
-  })
-);
-
+console.log('Deploying EquioGenesis');
 (async () => {
-
-  // store list of arguments in EquioGenesis generate method
-  const args = [];
-  // flag for validation erros
-  let error = false;
-  let prgm = program.version('0.1.0');
-
+  let web3 = new Web3();
+  // connect to ETH node
+  web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'));
+  // log network name
+  let network = await networkInfo(web3);
+  console.log('Connected to network', network.name);
   // contract initialization
-  const contractPath = path.resolve('src/equio.sol');
-  const source = fs.readFileSync(contractPath, 'utf8');
-  const compiledContract = solc.compile(source, 1);
-  const abi = JSON.parse(compiledContract.contracts[':Equio'].interface);
-  const bytecode = '0x' + compiledContract.contracts[':Equio'].bytecode;
+  let contractPath = path.resolve('src/equio.sol');
+  let source = fs.readFileSync(contractPath, 'utf8');
+  let compiledContract = solc.compile(source, 1);
+  let abi = compiledContract.contracts[':EquioGenesis'].interface;
+  let bytecode = '0x' + compiledContract.contracts[':EquioGenesis'].bytecode;
+  let gasEstimate = web3.eth.estimateGas({data: bytecode});
+  let MyContract = web3.eth.contract(JSON.parse(abi));
 
-  // get arguments from abi for 'generate' method
-  const constructorInputs = abi.find( block => (block.type === 'constructor')).inputs;
+  let data = {
+    from: web3.eth.accounts[0],
+    data: bytecode,
+    gas: gasEstimate
+  };
 
-  for (let i = 0; i < constructorInputs.length; i += 1) {
-    const input = constructorInputs[i];
-    const char = getChar(input.name);
-    const name = getName(input.name);
-    const type = input.type;
-    const argDesc = `-${char}, --${name} <${type}>`
-    args.push(name);
-    prgm = prgm.option(argDesc);
+  while (web3.eth.syncing) {
+    console.log('still syncing');
   }
 
   // Deploy contract
@@ -134,11 +56,6 @@ const deploy = async (web3, abi, data, Contract, args, network) => (
             console.log('Saved EquioGenesis Address');
         });
       }
-      console.log('Password hash', prgm.password_hash);
-      // deploy the contract
-      await deploy(web3, abi, deployData, Contract, prgm, network);
-    } catch (err) {
-      console.log(err);
     }
-  }
+  });
 })();
