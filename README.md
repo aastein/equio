@@ -10,11 +10,19 @@ Use a wallet that is compatible with [web3.js](https://github.com/ethereum/web3.
 
 Install dependencies with `yarn install`
 
-Deploy a new Equio contract with `yarn deploy <args>`
+Deploy a new EquioGenesis contract with `yarn deployGenesis`
+
+Deploy a new Equio contract through an EquioGenesis address with `yarn callGenerate <args>`
+
+Deploy a new Equio contract with `yarn deployNew <args>`
 
 ## Commands
 
-#### yarn deploy <args>
+#### yarnDeployGenesis
+
+Deploys an EquioGenesis contract which can create new Equio contracts.
+
+#### yarn deployNew / yarn callGenerate <args>
 
 Deploys a new Equio contract.
 
