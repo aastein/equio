@@ -1,16 +1,29 @@
+/*
+ *  Context:
+ *    This is a modified version of a script used in my public repo @ https://github.com/aastein/equio
+ *
+ *  Summary:
+ *    There exists a smart contract called Equio which must be deployed with values supplied
+ *    to its constructor. One of these values is a hashed kill-switch password. This field
+ *    is unweildy for a user to compute on their own, this value can be optionally computed
+ *    by this script.
+ */
+
 const program = require('commander');
 const prompt = require('prompt');
 const fs = require("fs");
 const Web3 = require('web3');
 const solc = require('solc');
 const path = require('path');
-
 const coder = require('web3/lib/solidity/coder');
 
 import  { networkInfo } from './utils';
 import  { getChar, getName } from './utils';
 
-// Prompt the user for a password and return the password
+/**
+ * Prompt the user for matching passwords and return the password
+ * @return {String} the password or an empty string if the passwords were invalid
+ */
 const getPassword = async () => (
   new Promise((resolve, reject) => {
     // promp schemas
@@ -33,9 +46,12 @@ const getPassword = async () => (
     prompt.start();
     prompt.get(promptSchema, (err, res1) => {
       prompt.get(confirmSchema, (err, res2) => {
-        if (!res1.password || !res2.password || res1.password !== res2.password) {
+        if (res1.password !== res2.password) {
           console.log('Passwords did not match');
-          reject();
+          resolve('');
+        } else if (!res1.password || !res2.password) {
+          console.log('Empty password not allowed');
+          resolve('');
         } else {
           resolve(res1.password);
         }
@@ -44,24 +60,33 @@ const getPassword = async () => (
   })
 );
 
-// call the generate function
-const deploy = async (web3, abi, data, Contract, args, network) => (
+/**
+ * Deploys a smart contract
+ * @param {Web3} web3 - a web3js instance
+ * @param {Object} abi -  smart contract abi
+ * @param {Object} deployData - ETH account and compiled smart contract bytecode
+ * @param {Array} args - smart contract constructor arguments
+ * @param {Object} network - info about the network the Web3 instance is connected to
+ * @return {String} deployed smart contract address
+ */
+const deploy = async (web3, abi, deployData, args, network) => (
   new Promise((resolve, reject) => {
+    // Instruct the user to confirm the transaction on the Parity GUI
     console.log('Confirm function call on Parity');
-    // TODO: create own web3js with args array
-    Contract.new(args.ico_name,
-      args.sale,
-      args.token,
-      args.password_hash,
-      args.earliest_buy_block,
-      args.earliest_buy_time,
-      data,
-      function(err, contract) {
+    // TODO: Fork and modify web3.js so that this method accepts contract args as an array
+    // Deploy the contract
+    const Contract = web3.eth.contract(abi);
+    Contract.new(args[0], args[1], args[2], args[3], args[4], args[5], deployData, function(err, contract) {
+        // this callback is called twice. Once when the transaction is posed and once when the transaction is confirmed.
         if (!err) {
           if (!contract.address) {
+            // First callback: Transaction has been posted
             console.log('Deployment transaction hash', contract.transactionHash);
+            console.log('Waiting for confirmation...');
           } else {
+            // Second callback: The contract has been deployed at an address
             console.log('Deployed Equio at:');
+            // log URLs to view the deployed contract
             switch (network.id) {
               case "1":
                 console.log(`https://etherscan.io/address/${contract.address}`);
@@ -83,93 +108,124 @@ const deploy = async (web3, abi, data, Contract, args, network) => (
   })
 );
 
-// Encodes constructor params
-const encodeConstructorParams = function (abi, params) {
-    return abi.filter(function (json) {
-        return json.type === 'constructor' && json.inputs.length === params.length;
-    }).map(function (json) {
-        return json.inputs.map(function (input) {
-            return input.type;
-        });
-    }).map(function (types) {
-        return coder.encodeParams(types, params);
-    })[0] || '';
-};
-
-(async () => {
-
-  // store list of arguments in EquioGenesis generate method
-  const args = [];
-  // flag for validation erros
-  let error = false;
-  let prgm = program.version('0.1.0');
-
+/**
+ * Compile Equio and return its abi and bytecode
+ * @return {Object} contract abi and bytecode
+ */
+const compileContract = () => {
   // contract initialization
   const contractPath = path.resolve('src/equio.sol');
   const source = fs.readFileSync(contractPath, 'utf8');
+  // compile with optimization enabled
   const compiledContract = solc.compile(source, 1);
   const abi = JSON.parse(compiledContract.contracts[':Equio'].interface);
   const bytecode = '0x' + compiledContract.contracts[':Equio'].bytecode;
+  // get the contracts constructor arguments from the abi
+  const constructorInputs = abi.find(func => (func.type === 'constructor')).inputs;
+  return { abi, bytecode, constructorInputs};
+}
 
-  // get arguments from abi for 'generate' method
-  const constructorInputs = abi.find( block => (block.type === 'constructor')).inputs;
+/**
+ * @param {Array} constructorInputs - list of constructor input names
+ * @return {Object} values for construcor arguments
+ */
+const getCommandLineArgs = async (constructorInputs, web3) => {
+  // flag for validation errors
+  let error = false;
+  // stores list of constructor arguments
+  const inputNames = [];
+  // stores input values
+  const inputValues = [];
+  // initalize command line arg library
+  let prgm = program.version('0.1.0');
 
+  // generate a command line argument for each constructor argument
+  // maintain an array of all constructor input names
   for (let i = 0; i < constructorInputs.length; i += 1) {
     const input = constructorInputs[i];
+    // decide on a command line arg flag for the parameter
     const char = getChar(input.name);
+    // format the parameter name
     const name = getName(input.name);
     const type = input.type;
     const argDesc = `-${char}, --${name} <${type}>`
-    args.push(name);
+    inputNames.push(name);
     prgm = prgm.option(argDesc);
   }
 
-  // validate command line arguments
+  // ingest values supplied by the user at function invocation. example: yarn run thisScript -a value -b value
   prgm.parse(process.argv);
 
-  for (let i = 0; i < args.length; i += 1) {
-    if (!prgm[args[i]]) {
-      console.log('No value for', args[i], prgm.options.reduce((res, option) => (
-        args[i] === option.long.slice(2, option.long.length) ? option.flags : res
+  for (let i = 0; i < inputNames.length; i += 1) {
+    let value = prgm[inputNames[i]];
+    if (!value) {
+      // log which parameter was not supplied
+      console.log('No value for', inputNames[i], prgm.options.reduce((res, option) => (
+        inputNames[i] === option.long.slice(2, option.long.length) ? option.flags : res
       ), ''));
-      if (args[i] !== 'password_hash') error = true;
+      // set error to true if an argument other than password hash was not supplied
+      if (inputNames[i] === 'password_hash') {
+        // If no password_hash, get a valid password from the user and hash it
+        let password = '';
+        while (password.length < 1) password = await getPassword();
+        value = web3.sha3(password);
+      } else {
+        error = true
+      };
     }
+    inputValues.push(value);
   }
 
-  if (!error) {
-    try {
-      const web3 = new Web3();
-      // connect to ETH node
-      web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'));
-      // log network name
-      const network = await networkInfo(web3);
-      console.log('Connected to network', network.name);
-      // Constract stuff
-      const Contract = web3.eth.contract(abi);
-      const deployData = {
-        from: web3.eth.accounts[0],
-        data: bytecode,
-      };
-      // If no password_hash, get pw from user and hash it
-      if (!prgm.password_hash) {
-        prgm.password_hash = web3.sha3(await getPassword());
-      }
-      console.log('Password hash', prgm.password_hash);
-      // deploy the contract
-      await deploy(web3, abi, deployData, Contract, prgm, network);
-      const params = [prgm.ico_name, prgm.sale, prgm.token, prgm.password_hash, prgm.earliest_buy_block, prgm.earliest_buy_time];
-      const encodedConstructorParams = encodeConstructorParams(abi, params);
-      console.log('encodeConstructorParams', encodedConstructorParams);
-      
-    } catch (err) {
-      console.log(err);
-    }
+  // exiting after all errors are logged
+  if (error) process.exit(1);
+  return inputValues;
+}
+
+/**
+ * Encodes contract constructor parameters.
+ * @param {Array} constructorInputs - Array of smart contract contructor inputs
+ * @param {Array} params - smart contract constructor paramters
+ * @return {Object} the encoded smart contract constructor parameters
+ */
+const encodeConstructorParams = (constructorData, constructorInputs) => {
+  const types = constructorInputs.map(input => { return input.type; });
+  return coder.encodeParams(types, constructorData);
+};
+
+/**
+ * todo: use these parameters to verify the source code on etherscan.
+ * Create encoded constructor parameters. This data is needed to verify the deployed contract's source code.
+ * @param {Array} constructorData - values for constructor arguments
+ */
+const reportEncodedConstructorParams = (constructorData, contractData) => {
+  const encodedConstructorParams = encodeConstructorParams(constructorData, contractData.constructorInputs);
+  console.log('Encoded Constructor Parameters:\n', encodedConstructorParams);
+}
+
+/**
+ * Script exexution begins at this self-executing async anonymous function.
+ */
+(async () => {
+  try {
+    const web3 = new Web3();
+    // compile and get smart contract data
+    const contractData = compileContract();
+    // get command line arg values for constructor arguments
+    const constructorData = await getCommandLineArgs(contractData.constructorInputs, web3);
+    // connect to ETH node
+    web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'));
+    // log the network name
+    const network = await networkInfo(web3);
+    console.log('Connected to network', network.name);
+    const deployData = {
+      from: web3.eth.accounts[0],
+      data: contractData.bytecode,
+    };
+    // deploy the contract
+    await deploy(web3, contractData.abi, deployData, constructorData, network);
+    // print encoded constructor params
+    reportEncodedConstructorParams(constructorData, contractData);
+  } catch (err) {
+    console.log(err);
   }
 })();
-
-
-/*
-
-  web3/lib/web3/contract.js 36 encodeConstructorParams
-
-*/
