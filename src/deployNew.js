@@ -50,54 +50,6 @@ const getPassword = async () => (
 );
 
 /**
- * Deploys a smart contract
- * @param {Web3} web3 - a web3js instance
- * @param {Object} abi -  smart contract abi
- * @param {Object} deployData - ETH account and compiled smart contract bytecode
- * @param {Array} args - smart contract constructor arguments
- * @param {Object} network - info about the network the Web3 instance is connected to
- * @return {String} deployed smart contract address
- */
-const deploy = async (web3, abi, deployData, args, network) => (
-  new Promise((resolve, reject) => {
-    // Instruct the user to confirm the transaction on the Parity GUI
-    console.log('Confirm function call on Parity');
-    // TODO: Fork and modify web3.js so that this method accepts contract args as an array
-    // Deploy the contract
-    const Contract = web3.eth.contract(abi);
-    Contract.new(args[0], args[1], args[2], args[3], args[4], args[5], deployData, function(err, contract) {
-        // this callback is called twice. Once when the transaction is posed and once when the transaction is confirmed.
-        if (!err) {
-          if (!contract.address) {
-            // First callback: Transaction has been posted
-            console.log('Deployment transaction hash', contract.transactionHash);
-            console.log('Waiting for confirmation...');
-          } else {
-            // Second callback: The contract has been deployed at an address
-            console.log('Deployed Equio at:');
-            // log URLs to view the deployed contract
-            switch (network.id) {
-              case "1":
-                console.log(`https://etherscan.io/address/${contract.address}`);
-                break;
-              case "42":
-                console.log(`https://kovan.etherscan.io/address/${contract.address}`);
-                break;
-              default:
-                break;
-            }
-            resolve(contract.address);
-          }
-        } else {
-          console.log(err);
-          reject(err);
-        }
-      }
-    );
-  })
-);
-
-/**
  * Compile Equio and return its abi and bytecode
  * @return {Object} contract abi and bytecode
  */
@@ -116,6 +68,7 @@ const compileContract = () => {
 
 /**
  * @param {Array} constructorInputs - list of constructor input names
+ * @param {Array} web3 - web3 instance used for hashing
  * @return {Object} values for construcor arguments
  */
 const getCommandLineArgs = async (constructorInputs, web3) => {
@@ -145,6 +98,9 @@ const getCommandLineArgs = async (constructorInputs, web3) => {
   // ingest values supplied by the user at function invocation. example: yarn run thisScript -a value -b value
   prgm.parse(process.argv);
 
+  // validate user supplied values.
+  // prompt if password hash is missing.
+  // add values to inputValues in the order the contract constructor declates its arguments
   for (let i = 0; i < inputNames.length; i += 1) {
     let value = prgm[inputNames[i]];
     if (!value) {
@@ -165,10 +121,65 @@ const getCommandLineArgs = async (constructorInputs, web3) => {
     inputValues.push(value);
   }
 
-  // exiting after all errors are logged
+  // exit after all errors are logged
   if (error) process.exit(1);
   return inputValues;
 }
+
+/**
+ * Called during contract deployment
+ * @param {Object} err - deployment errors
+ * @param {Object} contract - web3js contract object
+ * @return {String} the deployed contract's address
+ */
+const deployCallback = (err, contract) => {
+  // this callback is called twice. Once when the transaction is posed and once when the transaction is confirmed.
+  if (!err) {
+    if (!contract.address) {
+      // First callback: Transaction has been posted
+      console.log('Deployment transaction hash', contract.transactionHash);
+      console.log('Waiting for confirmation...');
+    } else {
+      // Second callback: The contract has been deployed at an address
+      console.log('Deployed Equio at:');
+      // log URLs to view the deployed contract
+      switch (network.id) {
+        case "1":
+          console.log(`https://etherscan.io/address/${contract.address}`);
+          break;
+        case "42":
+          console.log(`https://kovan.etherscan.io/address/${contract.address}`);
+          break;
+        default:
+          break;
+      }
+      resolve(contract.address);
+    }
+  } else {
+    console.log(err);
+    reject(err);
+  }
+}
+
+/**
+ * Deploys a smart contract
+ * @param {Web3} web3 - a web3js instance
+ * @param {Object} abi -  smart contract abi
+ * @param {Object} deployData - ETH account and compiled smart contract bytecode
+ * @param {Array} args - smart contract constructor arguments
+ * @param {Object} network - info about the network the Web3 instance is connected to
+ * @return {String} deployed smart contract address
+ */
+const deploy = async (web3, abi, deployData, args, network) => (
+  new Promise((resolve, reject) => {
+    // Instruct the user to confirm the transaction on the Parity GUI
+    console.log('Confirm function call on Parity');
+    // TODO: Fork and modify web3.js so that this method accepts contract args as an array
+    // Deploy the contract
+    const Contract = web3.eth.contract(abi);
+    Contract.new(args[0], args[1], args[2], args[3], args[4], args[5], deployData, deployCallback);
+  })
+);
 
 /**
  * Encodes contract constructor parameters.
