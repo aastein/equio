@@ -1,14 +1,3 @@
-/*
- *  Context:
- *    This is a modified version of a script used in my public repo @ https://github.com/aastein/equio
- *
- *  Summary:
- *    There exists a smart contract called Equio which must be deployed with values supplied
- *    to its constructor. One of these values is a hashed kill-switch password. This field
- *    is unweildy for a user to compute on their own, this value can be optionally computed
- *    by this script.
- */
-
 const program = require('commander');
 const prompt = require('prompt');
 const fs = require("fs");
