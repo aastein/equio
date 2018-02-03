@@ -60,7 +60,7 @@ Options:
 
 Encodes a comma separated list of constructor aguments. Helpful for validating deployed contracts.
 
-Run `yarn enoce --help` to see arguments
+Run `yarn encode --help` to see arguments
 
 ```sh
 Options:
